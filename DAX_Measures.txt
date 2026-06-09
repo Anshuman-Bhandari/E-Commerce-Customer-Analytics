@@ -1,0 +1,235 @@
+============================================================
+  DAX MEASURES - E-Commerce Customer Analytics
+  Copy each block and paste into Power BI > New Measure
+============================================================
+
+-- ==========================================================
+-- TABLE: Fact_Session
+-- ==========================================================
+
+-- CORE CONVERSION & FUNNEL
+
+Total Sessions = COUNTROWS(Fact_Session)
+
+Converted Sessions = CALCULATE(COUNTROWS(Fact_Session), Fact_Session[Purchase_Flag] = "Yes")
+
+Conversion Rate = DIVIDE([Converted Sessions], [Total Sessions], 0)
+
+Conversion Rate % = FORMAT([Conversion Rate], "0.00%")
+
+Bounced Sessions = CALCULATE(COUNTROWS(Fact_Session), Fact_Session[Bounce_Flag] = "Yes")
+
+Bounce Rate = DIVIDE([Bounced Sessions], [Total Sessions], 0)
+
+Bounce Rate % = FORMAT([Bounce Rate], "0.00%")
+
+Cart Sessions = CALCULATE(COUNTROWS(Fact_Session), Fact_Session[Add_to_Cart_Count] > 0)
+
+Abandoned Cart Sessions = CALCULATE(COUNTROWS(Fact_Session), Fact_Session[Cart_Abandonment_Flag] = "Yes")
+
+Cart Abandonment Rate = DIVIDE([Abandoned Cart Sessions], [Cart Sessions], 0)
+
+Cart Abandonment Rate % = FORMAT([Cart Abandonment Rate], "0.00%")
+
+Checkout Sessions = CALCULATE(COUNTROWS(Fact_Session), Fact_Session[Checkout_Initiated_Flag] = "Yes")
+
+Checkout Initiation Rate = DIVIDE([Checkout Sessions], [Total Sessions], 0)
+
+Checkout Initiation Rate % = FORMAT([Checkout Initiation Rate], "0.00%")
+
+Add to Cart Sessions = CALCULATE(COUNTROWS(Fact_Session), Fact_Session[Add_to_Cart_Count] > 0)
+
+Add to Cart Rate = DIVIDE([Add to Cart Sessions], [Total Sessions], 0)
+
+Add to Cart Rate % = FORMAT([Add to Cart Rate], "0.00%")
+
+-- REVENUE & ORDERS
+
+Total Revenue = SUM(Fact_Session[Purchase_Amount])
+
+Total Revenue $ = FORMAT([Total Revenue], "$#,##0")
+
+Average Order Value = DIVIDE([Total Revenue], [Converted Sessions], 0)
+
+Average Order Value $ = FORMAT([Average Order Value], "$#,##0.00")
+
+Total Orders = [Converted Sessions]
+
+Total Discount = SUM(Fact_Session[Discount_Applied])
+
+Revenue After Discount = [Total Revenue] - [Total Discount]
+
+Revenue After Discount $ = FORMAT([Revenue After Discount], "$#,##0")
+
+Discount Penetration = DIVIDE(CALCULATE(COUNTROWS(Fact_Session), Fact_Session[Discount_Applied] > 0), [Converted Sessions], 0)
+
+Discount Penetration % = FORMAT([Discount Penetration], "0.00%")
+
+Average Discount Per Order = DIVIDE([Total Discount], [Converted Sessions], 0)
+
+Average Discount Per Order $ = FORMAT([Average Discount Per Order], "$#,##0.00")
+
+Total Items Purchased = SUM(Fact_Session[Items_Purchased])
+
+Avg Items Per Order = DIVIDE([Total Items Purchased], [Converted Sessions], 0)
+
+-- CUSTOMER METRICS
+
+Total Unique Users = DISTINCTCOUNT(Fact_Session[User_ID])
+
+Unique Buyers = CALCULATE(DISTINCTCOUNT(Fact_Session[User_ID]), Fact_Session[Purchase_Flag] = "Yes")
+
+Buyer Rate = DIVIDE([Unique Buyers], [Total Unique Users], 0)
+
+Buyer Rate % = FORMAT([Buyer Rate], "0.00%")
+
+Revenue Per User = DIVIDE([Total Revenue], [Total Unique Users], 0)
+
+Revenue Per User $ = FORMAT([Revenue Per User], "$#,##0.00")
+
+Revenue Per Buyer = DIVIDE([Total Revenue], [Unique Buyers], 0)
+
+Revenue Per Buyer $ = FORMAT([Revenue Per Buyer], "$#,##0.00")
+
+Repeat Buyers = CALCULATE(DISTINCTCOUNT(Fact_Session[User_ID]), Fact_Session[Previous_Visits_Count] > 0, Fact_Session[Purchase_Flag] = "Yes")
+
+Repeat Purchase Rate = DIVIDE([Repeat Buyers], [Unique Buyers], 0)
+
+Repeat Purchase Rate % = FORMAT([Repeat Purchase Rate], "0.00%")
+
+New Visitors = CALCULATE(DISTINCTCOUNT(Fact_Session[User_ID]), Fact_Session[Is_New_Visitor] = 1)
+
+New Visitor Conversion Rate = DIVIDE(CALCULATE([Converted Sessions], Fact_Session[Is_New_Visitor] = 1), CALCULATE([Total Sessions], Fact_Session[Is_New_Visitor] = 1), 0)
+
+Returning Visitor Conversion Rate = DIVIDE(CALCULATE([Converted Sessions], Fact_Session[Is_New_Visitor] = 0), CALCULATE([Total Sessions], Fact_Session[Is_New_Visitor] = 0), 0)
+
+-- SESSION QUALITY
+
+Avg Session Duration = AVERAGE(Fact_Session[Session_Duration])
+
+Avg Session Duration Min = FORMAT([Avg Session Duration] / 60, "0.0") & " min"
+
+Avg Pages Viewed = AVERAGE(Fact_Session[Pages_Viewed])
+
+Avg Scroll Depth = AVERAGE(Fact_Session[Total_Scroll_Depth])
+
+Avg Scroll Depth % = FORMAT([Avg Scroll Depth] / 100, "0%")
+
+Sessions Per User = DIVIDE([Total Sessions], [Total Unique Users], 0)
+
+Avg Session Duration for Buyers = CALCULATE(AVERAGE(Fact_Session[Session_Duration]), Fact_Session[Purchase_Flag] = "Yes")
+
+Avg Session Duration for Non-Buyers = CALCULATE(AVERAGE(Fact_Session[Session_Duration]), Fact_Session[Purchase_Flag] = "No")
+
+Engaged Sessions = CALCULATE(COUNTROWS(Fact_Session), Fact_Session[Bounce_Flag] = "No")
+
+Engagement Rate = DIVIDE([Engaged Sessions], [Total Sessions], 0)
+
+Engagement Rate % = FORMAT([Engagement Rate], "0.00%")
+
+-- PERIOD COMPARISON (Time Intelligence)
+
+Revenue Current Month = CALCULATE([Total Revenue], DATESMTD(Dim_Date[Date]))
+
+Revenue Previous Month = CALCULATE([Total Revenue], DATEADD(DATESMTD(Dim_Date[Date]), -1, MONTH))
+
+Revenue MoM Growth = DIVIDE([Revenue Current Month] - [Revenue Previous Month], [Revenue Previous Month], 0)
+
+Revenue MoM Growth % = FORMAT([Revenue MoM Growth], "0.00%")
+
+Sessions Current Month = CALCULATE([Total Sessions], DATESMTD(Dim_Date[Date]))
+
+Sessions Previous Month = CALCULATE([Total Sessions], DATEADD(DATESMTD(Dim_Date[Date]), -1, MONTH))
+
+Sessions MoM Growth = DIVIDE([Sessions Current Month] - [Sessions Previous Month], [Sessions Previous Month], 0)
+
+Sessions MoM Growth % = FORMAT([Sessions MoM Growth], "0.00%")
+
+Conversion Rate Current Month = CALCULATE([Conversion Rate], DATESMTD(Dim_Date[Date]))
+
+AOV Current Month = CALCULATE([Average Order Value], DATESMTD(Dim_Date[Date]))
+
+AOV Previous Month = CALCULATE([Average Order Value], DATEADD(DATESMTD(Dim_Date[Date]), -1, MONTH))
+
+AOV MoM Growth = DIVIDE([AOV Current Month] - [AOV Previous Month], [AOV Previous Month], 0)
+
+AOV MoM Growth % = FORMAT([AOV MoM Growth], "0.00%")
+
+Revenue Current Quarter = CALCULATE([Total Revenue], DATESQTD(Dim_Date[Date]))
+
+Revenue Current Year = CALCULATE([Total Revenue], DATESYTD(Dim_Date[Date]))
+
+-- ==========================================================
+-- TABLE: Dim_User
+-- ==========================================================
+
+Avg Customer LTV = AVERAGE(Dim_User[Lifetime_Value])
+
+Avg Customer LTV $ = FORMAT([Avg Customer LTV], "$#,##0")
+
+Total Customers = COUNTROWS(Dim_User)
+
+Customers with Purchases = CALCULATE(COUNTROWS(Dim_User), Dim_User[Has_Purchased] = 1)
+
+Purchase Penetration Rate = DIVIDE([Customers with Purchases], [Total Customers], 0)
+
+Avg Lifetime Orders = AVERAGE(Dim_User[Lifetime_Orders])
+
+Avg User Tenure Days = AVERAGE(Dim_User[User_Tenure_Days])
+
+Avg User Tenure Months = FORMAT([Avg User Tenure Days] / 30, "0.0") & " months"
+
+Avg Days To First Purchase = AVERAGE(Dim_User[Days_To_First_Purchase])
+
+Avg Visits Per Customer = AVERAGE(Dim_User[Total_Visits_Count])
+
+Avg Session Duration Per Customer = AVERAGE(Dim_User[Avg_Session_Duration])
+
+Avg Scroll Depth Per Customer = AVERAGE(Dim_User[Avg_Scroll_Depth])
+
+Email Subscribed Count = CALCULATE(COUNTROWS(Dim_User), Dim_User[Email_Subscribed_Clean] = "Yes")
+
+Email Subscription Rate = DIVIDE([Email Subscribed Count], [Total Customers], 0)
+
+Email Subscription Rate % = FORMAT([Email Subscription Rate], "0.00%")
+
+-- ==========================================================
+-- TABLE: Dim_Product
+-- ==========================================================
+
+Total Products = COUNTROWS(Dim_Product)
+
+Avg Base Price = AVERAGE(Dim_Product[Base_Price])
+
+Avg Base Price $ = FORMAT([Avg Base Price], "$#,##0.00")
+
+Avg Profit Margin = AVERAGE(Dim_Product[Profit_Margin])
+
+Avg Profit Margin % = FORMAT([Avg Profit Margin], "0.00%")
+
+Avg Product Rating = AVERAGE(Dim_Product[Product_Rating])
+
+Avg Review Count = AVERAGE(Dim_Product[Review_Count])
+
+Avg Return Rate = AVERAGE(Dim_Product[Return_Rate])
+
+Avg Return Rate % = FORMAT([Avg Return Rate], "0.00%")
+
+Low Stock Products = CALCULATE(COUNTROWS(Dim_Product), Dim_Product[Inventory_Status] = "Low Stock")
+
+Out of Stock Products = CALCULATE(COUNTROWS(Dim_Product), Dim_Product[Inventory_Status] = "Out of Stock")
+
+Low Stock Alert % = DIVIDE([Low Stock Products], [Total Products], 0)
+
+Total Inventory Value = SUMX(Dim_Product, Dim_Product[Inventory_Level] * Dim_Product[Base_Price])
+
+Total Inventory Value $ = FORMAT([Total Inventory Value], "$#,##0")
+
+Avg Lead Time = AVERAGE(Dim_Product[Lead_Time])
+
+Avg Shipping Weight = AVERAGE(Dim_Product[Shipping_Weight])
+
+-- ==========================================================
+-- END OF DAX MEASURES
+-- Total: 80+ measures across 3 tables
+-- ==========================================================
